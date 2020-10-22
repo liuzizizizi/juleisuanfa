@@ -1,0 +1,43 @@
+data=w(:,2:14);
+[~,X_dim]=size(data);
+for i=1:X_dim
+   minr=min(data(:,i));
+   maxr=max(data(:,i));
+   data(:,i)=(data(:,i)-minr)/(maxr-minr);
+end
+X=data(:,1:X_dim);
+[num,dim] = size(X);
+N=100;
+k=zeros(N,1);
+for t=1:N
+    % 抽样 %
+    sample=round(num/10);
+    rand_array=randperm(num);
+    X_part=X(rand_array(1:sample),:); 
+    D=pdist(X_part);
+    miu=mean(D);
+    sigma=std(D);
+    T2=miu+5*sigma;
+    K_max=20;
+    %copy 自动划分聚类中心和个数%
+    k(t) = 0;
+    YB=[X zeros(num,1)]; 
+    Centr=zeros(K_max,dim);
+    while size(YB,1) && (k(t)<K_max)
+        k(t)=k(t)+1;
+        Centr(k(t),:)=YB(1,1:dim);
+        YB(1,:)=[];            
+        L=size(YB,1);
+        if L
+            dist1=(YB(:,1:dim)-ones(L,1)*Centr(k(t),1:dim)).^2;   
+            dist2=sum(dist1,2);  
+        end
+        for i=1:L-1
+            if(dist2(i)<T2)  
+               YB(i,dim+1)=1;
+            end
+        end
+        YB(YB(:,dim+1)==1,:)=[];  
+    end
+end
+tabulate(k(:))
